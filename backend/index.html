@@ -1,65 +1,111 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SQLite CRUD Test</title>
+    <title>SQLite Database Interface</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      input {
+        margin: 5px;
+        padding: 5px;
+      }
+      button {
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
-    <h1>CRUD Testaus</h1>
+    <h1>SQLite Database Interface</h1>
 
-    <h2>Lisää tietue</h2>
-    <input type="text" id="name" placeholder="Nimi" />
-    <input type="text" id="description" placeholder="Kuvaus" />
-    <input type="number" id="quantity" placeholder="Määrä" />
-    <button onclick="addItem()">Lisää</button>
+    <h2>Add User</h2>
+    Name: <input type="text" id="name" placeholder="Enter name" /> Email:
+    <input type="email" id="email" placeholder="Enter email" />
+    <button onclick="addUser()">Add User</button>
 
-    <h2>Kaikki tiedot</h2>
-    <button onclick="fetchItems()">Päivitä</button>
-    <ul id="items-list"></ul>
+    <h2>Users</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable"></tbody>
+    </table>
 
     <script>
-      const apiUrl = "http://localhost:3000/items";
+      const apiUrl = "http://localhost:3000/users";
 
-      async function addItem() {
+      // Fetch users from database and display them
+      async function fetchUsers() {
+        const response = await fetch(apiUrl);
+        const users = await response.json();
+        const table = document.getElementById("usersTable");
+        table.innerHTML = ""; // Clear table
+
+        users.forEach((user) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                `;
+          table.appendChild(row);
+        });
+      }
+
+      // Add new user to the database
+      async function addUser() {
         const name = document.getElementById("name").value;
-        const description = document.getElementById("description").value;
-        const quantity = document.getElementById("quantity").value;
+        const email = document.getElementById("email").value;
 
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, description, quantity }),
+          body: JSON.stringify({ name, email }),
         });
 
         if (response.ok) {
-          alert("Tietue lisätty!");
-          fetchItems();
+          alert("User added!");
+          fetchUsers(); // Refresh user list
         }
       }
 
-      async function fetchItems() {
-        const response = await fetch(apiUrl);
-        const items = await response.json();
-        const list = document.getElementById("items-list");
-        list.innerHTML = "";
-
-        items.forEach((item) => {
-          const li = document.createElement("li");
-          li.innerHTML = `${item.name} - ${item.description} - ${item.quantity} 
-                    <button onclick="deleteItem(${item.id})">Poista</button>`;
-          list.appendChild(li);
-        });
-      }
-
-      async function deleteItem(id) {
+      // Delete user from database
+      async function deleteUser(id) {
         const response = await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
 
         if (response.ok) {
-          alert("Tietue poistettu!");
-          fetchItems();
+          alert("User deleted!");
+          fetchUsers(); // Refresh user list
         }
       }
+
+      // Load users when page loads
+      fetchUsers();
     </script>
   </body>
 </html>
