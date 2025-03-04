@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQLite CRUD Test</title>
+  </head>
+  <body>
+    <h1>CRUD Testaus</h1>
+
+    <h2>Lisää tietue</h2>
+    <input type="text" id="name" placeholder="Nimi" />
+    <input type="text" id="description" placeholder="Kuvaus" />
+    <input type="number" id="quantity" placeholder="Määrä" />
+    <button onclick="addItem()">Lisää</button>
+
+    <h2>Kaikki tiedot</h2>
+    <button onclick="fetchItems()">Päivitä</button>
+    <ul id="items-list"></ul>
+
+    <script>
+      const apiUrl = "http://localhost:3000/items";
+
+      async function addItem() {
+        const name = document.getElementById("name").value;
+        const description = document.getElementById("description").value;
+        const quantity = document.getElementById("quantity").value;
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, description, quantity }),
+        });
+
+        if (response.ok) {
+          alert("Tietue lisätty!");
+          fetchItems();
+        }
+      }
+
+      async function fetchItems() {
+        const response = await fetch(apiUrl);
+        const items = await response.json();
+        const list = document.getElementById("items-list");
+        list.innerHTML = "";
+
+        items.forEach((item) => {
+          const li = document.createElement("li");
+          li.innerHTML = `${item.name} - ${item.description} - ${item.quantity} 
+                    <button onclick="deleteItem(${item.id})">Poista</button>`;
+          list.appendChild(li);
+        });
+      }
+
+      async function deleteItem(id) {
+        const response = await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+
+        if (response.ok) {
+          alert("Tietue poistettu!");
+          fetchItems();
+        }
+      }
+    </script>
+  </body>
+</html>
