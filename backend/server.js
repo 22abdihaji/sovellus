@@ -4,35 +4,56 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = 5000; // Using a different port for backend
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Luo SQLite-tietokanta
+// Connect to SQLite Database
 const db = new sqlite3.Database("./database.db", (err) => {
   if (err) {
-    console.error("Tietokantavirhe:", err.message);
+    console.error("❌ Database error:", err.message);
   } else {
-    console.log("Yhteys SQLite-tietokantaan onnistui.");
+    console.log("✅ Connected to SQLite database.");
     db.run(`
-            CREATE TABLE IF NOT EXISTS items (
+            CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                description TEXT,
-                quantity INTEGER
+                email TEXT NOT NULL
             )
         `);
   }
 });
 
-// ➤ **TÄMÄ LISÄTÄÄN**
-app.get("/", (req, res) => {
-  res.send("Palvelin toimii!");
+// API to fetch users
+app.get("/users", (req, res) => {
+  db.all(`SELECT * FROM users`, [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
+    }
+  });
 });
 
-// Käynnistä palvelin
+// API to add a new user
+app.post("/users", (req, res) => {
+  const { name, email } = req.body;
+  db.run(
+    `INSERT INTO users (name, email) VALUES (?, ?)`,
+    [name, email],
+    function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.json({ id: this.lastID });
+      }
+    }
+  );
+});
+
+// Start Server
 app.listen(PORT, () => {
-  console.log(`Palvelin käynnissä osoitteessa http://localhost:${PORT}`);
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
 });

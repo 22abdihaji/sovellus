@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQLite Database Interface</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        text-align: center;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      input {
+        margin: 5px;
+        padding: 5px;
+        width: 150px;
+      }
+      button {
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SQLite Database Interface</h1>
+
+    <h2>Add User</h2>
+    <label>Name:</label>
+    <input type="text" id="name" placeholder="Enter name" />
+    <label>Email:</label>
+    <input type="email" id="email" placeholder="Enter email" />
+    <button onclick="addUser()">Add User</button>
+
+    <h2>Users</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable"></tbody>
+    </table>
+
+    <script>
+      const apiUrl = "http://localhost:3000/users";
+
+      // Fetch users from database and display them
+      async function fetchUsers() {
+        const response = await fetch(apiUrl);
+        const users = await response.json();
+        const table = document.getElementById("usersTable");
+        table.innerHTML = ""; // Clear table
+
+        users.forEach((user) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                `;
+          table.appendChild(row);
+        });
+      }
+
+      // Add new user to the database
+      async function addUser() {
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+
+        if (name.trim() === "" || email.trim() === "") {
+          alert("Please enter a valid name and email.");
+          return;
+        }
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email }),
+        });
+
+        if (response.ok) {
+          alert("User added!");
+          fetchUsers(); // Refresh user list
+        }
+      }
+
+      // Delete user from database
+      async function deleteUser(id) {
+        const response = await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+
+        if (response.ok) {
+          alert("User deleted!");
+          fetchUsers(); // Refresh user list
+        }
+      }
+
+      // Load users when page loads
+      fetchUsers();
+    </script>
+  </body>
+</html>
