@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-const PORT = 5000; // Using a different port for backend
+const PORT = 5000; // Backend runs on port 5000
 
 // Middleware
 app.use(cors());
